@@ -32,8 +32,8 @@ class Player:
             # Here is where you should implement code to parse the packets from
             # the engine and act on it. We are just printing it instead.
             print data
-
-            s.send("CALL\n")
+            
+                s.send("CALL\n")
 
         # Clean up the socket.
         print MADBot_delta

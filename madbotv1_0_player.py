@@ -48,7 +48,7 @@ class Player:
                 max_preflop_equity, max_flop_equity, max_turn_equity, max_river_equity = 0, 0, 0, 0 # Flush all equities
 
             elif command == "NEWHAND":
-                if PLOT_FLAG == True:
+                if False == True: # Logging
                     MADBot_delta.append(str(data[-3]))
                     otherbot_delta.append(str(data[-2]))
                 hand = data[3:7]
