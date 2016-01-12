@@ -80,7 +80,7 @@ class Player:
                     if cmd != "CALL":
                         rand = random.random()
                         if risk < 0.1:
-                            if (rand >= 0.05):
+                            if (rand >= 0.01):
                                 s.send("FOLD\n")
                         else:
                             if max_flop_equity >= 0.95:
@@ -130,7 +130,7 @@ class Player:
                     if cmd != "CALL":
                         rand = random.random()
                         if risk < 0.1:
-                            if (rand >= 0.1):
+                            if (rand >= 0.01):
                                 s.send("FOLD\n")
                         else:
                             if max_flop_equity >= 0.95:
