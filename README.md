@@ -6,3 +6,9 @@ First submission; performed averagely when played with other bots during Casino 
 
 ### MADbotv1.1
 Only minor tweaks to thresholds were made; MADbotv1.1 is less aggressive, but sufficient stops on behavior after bankroll is negative aren't enforced absolutely, but are stronger. 
+
+### MADbotv1.2
+Fixed bugs in both computation of maximum equity and if/else statements. 
+
+### MADbotv1.3
+New strategy to only fold or call based on thresholds of equity; if the bot plays the hand after flop comes out, it will play till completion. 
