@@ -45,161 +45,85 @@ class Player:
             if command == "NEWGAME":
                 hand = [""]*4 # Initialize hand to be empty
                 risk = 1
-                max_preflop_equity, max_flop_equity, max_turn_equity, max_river_equity = 0, 0, 0, 0 # Flush all equities
+                max_preflop_equity, max_flop_equity = 0, 0 # Flush all equities
 
             elif command == "NEWHAND":
                 if PLOT_FLAG == True:
                     MADBot_delta.append(str(data[-3]))
                     otherbot_delta.append(str(data[-2]))
+
                 hand = data[3:7]
-                two_pairs = return_pairs(hand)
-                convs_two_pairs = [(convert_pbots_hand_to_twohandeval(hole[0], conv), convert_pbots_hand_to_twohandeval(hole[1], conv)) for hole in two_pairs]
-                max_preflop_equity = max([HandEvaluator.evaluate_hand([Card(h[0][0], h[0][1]), Card(h[1][0], h[1][1])], []) for h in convs_two_pairs])
+                hand_pairs = get_all_pairs(hand)
+                # converts engine's format to pokereval's format
+                converted_hand_pairs = [(convert_pbots_hand_to_twohandeval(hole[0], conv), convert_pbots_hand_to_twohandeval(hole[1], conv)) for hole in hand_pairs]
+                max_preflop_equity = max([HandEvaluator.evaluate_hand([Card(h[0][0], h[0][1]), Card(h[1][0], h[1][1])], []) for h in converted_hand_pairs])
 
             elif command == "GETACTION":
-                # Currently CHECK on every move. You'll want to change this.
                 print 'risk', risk
                 info = parse_GETACTION(data)
                 if info['numBoardCards'] == 0:
                     l, u = get_lower_and_upper_bounds(info["legalActions"][-1])[1]
-                    if max_preflop_equity >= 0.99:
+                    if max_preflop_equity >= 0.95:
                         s.send("RAISE:" + str(u) + "\n")
-                    elif max_preflop_equity >= 0.97:
-                        avg = int((u+l)/2)
-                        s.send("RAISE:" + str(avg) + "\n")
-                    elif max_preflop_equity >= 0.95:
-                        s.send("RAISE:" + str(l) + "\n")
-                    else:
+                    elif max_preflop_equity >= 0.75:
                         s.send("CALL\n")
+                    else:
+                        s.send("CHECK\n")
 
                 elif info['numBoardCards'] == 3:
                     conv_all_cards = []
-                    conv_board_cards = convert_list_to_card_list([convert_pbots_hand_to_twohandeval(card, conv) for card in info['boardCards']]) # in Card form
-                    max_flop_equity = [HandEvaluator.evaluate_hand([Card(h[0][0], h[0][1]), Card(h[1][0], h[1][1])], conv_board_cards) for h in convs_two_pairs]
+                    # converts engine's format to pokereval's format
+                    converted_board_cards = convert_list_to_card_list([convert_pbots_hand_to_twohandeval(card, conv) for card in info['boardCards']]) # in Card form
+                    max_flop_equity = max([HandEvaluator.evaluate_hand([Card(h[0][0], h[0][1]), Card(h[1][0], h[1][1])], converted_board_cards) for h in converted_hand_pairs])
                     cmd, (l, u) = get_lower_and_upper_bounds(info["legalActions"][-1])
                     if cmd != "CALL":
-                        rand = random.random()
-                        if risk < 0.1:
-                            if (rand >= 0.01):
-                                s.send("FOLD\n")
+                        if max_flop_equity >= 0.95:
+                            s.send("RAISE:" + str(u) + "\n")
+                        elif max_flop_equity >= 0.85:
+                            s.send("CALL\n")
                         else:
-                            if max_flop_equity >= 0.95:
-                                if (rand < 0.05):
-                                    s.send("CHECK\n")
-                                elif (risk < 0.2):
-                                    s.send(cmd + ":" + str(u) + "\n")
-                                else:
-                                    s.send(cmd + ":" + str(u) + "\n")
-                            elif max_flop_equity >= 0.90:
-                                if (risk < 0.2):
-                                    if (rand < 0.1):
-                                        s.send("CALL\n")
-                                elif (rand < 0.10):
-                                    s.send("CHECK\n")
-                                else:
-                                    avg = int((2*u+l)/3)
-                                    s.send(cmd + ":" + str(avg) + "\n")
-                            elif max_flop_equity >= 0.75:
-                                if (risk < 0.2):
-                                    if (rand < 0.1):
-                                        s.send("CALL\n")
-                                elif (rand < 0.10):
-                                    s.send("CHECK\n")
-                                else:
-                                    avg = int((u+l)/2)
-                                    s.send(cmd + ":" + str(avg) + "\n")
-                            elif max_flop_equity >= 0.60:
-                                if (rand < 0.15) or risk < 0.2:
-                                    s.send("FOLD\n")
-                                else:
-                                    s.send("CALL\n")
-                            else:
-                                if (rand < 0.05):
-                                    s.send("CALL\n")
-                                else:
-                                    s.send("FOLD\n")
+                            s.send("CHECK\n")
                     else:
-                        s.send("CALL\n")
-
+                        if max_flop_equity >= 0.85:
+                            s.send("CALL\n")
+                        else:
+                            s.send("CHECK\n")
 
                 elif info['numBoardCards'] == 4:
                     conv_all_cards = []
-                    conv_board_cards = convert_list_to_card_list([convert_pbots_hand_to_twohandeval(card, conv) for card in info['boardCards']]) # in Card form
-                    max_flop_equity = [HandEvaluator.evaluate_hand([Card(h[0][0], h[0][1]), Card(h[1][0], h[1][1])], conv_board_cards) for h in convs_two_pairs]
+                    converted_board_cards = convert_list_to_card_list([convert_pbots_hand_to_twohandeval(card, conv) for card in info['boardCards']]) # in Card form
+                    max_flop_equity = [HandEvaluator.evaluate_hand([Card(h[0][0], h[0][1]), Card(h[1][0], h[1][1])], converted_board_cards) for h in converted_hand_pairs]
                     cmd, (l, u) = get_lower_and_upper_bounds(info["legalActions"][-1])
                     if cmd != "CALL":
-                        rand = random.random()
-                        if risk < 0.1:
-                            if (rand >= 0.01):
-                                s.send("FOLD\n")
+                        if max_flop_equity >= 0.95:
+                            s.send("RAISE:" + str(u) + "\n")
+                        elif max_flop_equity >= 0.85:
+                            s.send("CALL\n")
                         else:
-                            if max_flop_equity >= 0.95:
-                                if (rand < 0.05):
-                                    s.send("CHECK\n")
-                                elif (risk < 0.01):
-                                    s.send(cmd + ":" + str(u) + "\n")
-                                else:
-                                    s.send(cmd + ":" + str(u) + "\n")
-                            elif max_flop_equity >= 0.80:
-                                if (risk < 0.2):
-                                    if (rand < 0.1):
-                                        s.send("FOLD\n")
-                                    else:
-                                        s.send("CHECK\n")
-                                elif (rand < 0.10):
-                                    s.send("CHECK\n")
-                                else:
-                                    avg = int((u+l)/2)
-                                    s.send(cmd + ":" + str(avg) + "\n")
-                            elif max_flop_equity >= 0.50:
-                                if (rand < 0.15) or risk < 0.2:
-                                    s.send("CHECK\n")
-                                else:
-                                    s.send("FOLD\n")
-                            else:
-                                s.send("FOLD\n")
+                            s.send("CHECK\n")
                     else:
-                        s.send("CALL\n")
+                        if max_flop_equity >= 0.85:
+                            s.send("CALL\n")
+                        else:
+                            s.send("CHECK\n")
 
                 elif info['numBoardCards'] == 5:
                     conv_all_cards = []
                     conv_board_cards = convert_list_to_card_list([convert_pbots_hand_to_twohandeval(card, conv) for card in info['boardCards']]) # in Card form
-                    max_flop_equity = [HandEvaluator.evaluate_hand([Card(h[0][0], h[0][1]), Card(h[1][0], h[1][1])], conv_board_cards) for h in convs_two_pairs]
+                    max_flop_equity = [HandEvaluator.evaluate_hand([Card(h[0][0], h[0][1]), Card(h[1][0], h[1][1])], conv_board_cards) for h in converted_hand_pairs]
                     cmd, (l, u) = get_lower_and_upper_bounds(info["legalActions"][-1])
                     if cmd != "CALL":
-                        rand = random.random()
-                        if risk < 0.1:
-                            if (rand >= 0.05):
-                                s.send("FOLD\n")
-                        else:
-                            if max_flop_equity >= 0.95:
-                                if (rand < 0.05):
-                                    s.send("CHECK\n")
-                                elif (risk < 0.01):
-                                    s.send("CALL\n")
-                                else:
-                                    s.send(cmd + ":" + str(u) + "\n")
-                            elif max_flop_equity >= 0.85:
-                                if (risk < 0.2):
-                                    if (rand < 0.1):
-                                        s.send("CALL\n")
-                                elif (rand < 0.10):
-                                    s.send("CHECK\n")
-                                else:
-                                    avg = int((u+l)/2)
-                                    s.send(cmd + ":" + str(avg) + "\n")
-                            elif max_flop_equity >= 0.50:
-                                if (rand < 0.15) or risk < 0.2:
-                                    s.send("CHECK\n")
-                                else:
-                                    s.send("\n")
-                            else:
-                                if (rand < 0.15):
-                                    s.send("CALL\n")
-                                else:
-                                    s.send("FOLD\n")
-                    else:
+                        if max_flop_equity >= 0.95:
+                            s.send("RAISE:" + str(u) + "\n")
+                        elif max_flop_equity >= 0.85:
                             s.send("CALL\n")
+                        else:
+                            s.send("CHECK\n")
+                    else:
+                        if max_flop_equity >= 0.85:
+                            s.send("CALL\n")
+                        else:
+                            s.send("CHECK\n")
                 else:
                     s.send("CALL\n")
 
@@ -211,17 +135,18 @@ class Player:
             elif command == "HANDOVER":
                 hand = [""]*4 # Empty the hand
                 bankroll = int(data[1])
-                risk = 1
-                if bankroll < 100:
-                    diff = 100 - bankroll
-                    if (float(math.log(diff)/math.log(10))) == 0:
-                        risk = 1
-                    elif bankroll > -50:
-                        risk = 1.0 / (float(math.log(diff)/math.log(10)))**(2)
-                    else:
-                        risk = 1.0 / (float(math.log(diff)/math.log(10)))**2
+                # risk = 1
+                # if bankroll < 100:
+                #     diff = 100 - bankroll
+                #     if (float(math.log(diff)/math.log(10))) == 0:
+                #         risk = 1
+                #     elif bankroll > -50:
+                #         risk = 1.0 / (float(math.log(diff)/math.log(10)))**(2)
+                #     else:
+                #         risk = 1.0 / (float(math.log(diff)/math.log(10)))**2
 
-                max_preflop_equity, max_flop_equity, max_turn_equity, max_river_equity = 0, 0, 0, 0 # Flush all equities
+                # max_preflop_equity, max_flop_equity, max_turn_equity, max_river_equity = 0, 0, 0, 0 # Flush all equities
+                max_preflop_equity, max_flop_equity = 0, 0
 
         # Clean up the socket.
         print MADBot_delta
@@ -281,7 +206,7 @@ def convert_pbots_hand_to_twohandeval(hand, conv):
     """
     return (conv[hand[0]], conv[hand[1]])
 
-def return_pairs(hand):
+def get_all_pairs(hand):
     """
     hand: list of size 4, each element is a card
     Return: returns all (4 choose 2) pairs of the original hand to compute 2-card preflop equities
@@ -307,7 +232,7 @@ def parse_GETACTION(data):
 def get_lower_and_upper_bounds(string):
     """
     string: of the form BET:XX:YY or RAISE:XX:YY (not necessarily two digits)
-    return: (XX, YY)
+    return: ['BET'/'RAISE', (XX, YY)]
     """
 
     last_colon = string.rfind(":")

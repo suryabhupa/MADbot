@@ -75,7 +75,7 @@ class Player:
                 elif info['numBoardCards'] == 3:
                     conv_all_cards = []
                     conv_board_cards = convert_list_to_card_list([convert_pbots_hand_to_twohandeval(card, conv) for card in info['boardCards']]) # in Card form
-                    max_flop_equity = [HandEvaluator.evaluate_hand([Card(h[0][0], h[0][1]), Card(h[1][0], h[1][1])], conv_board_cards) for h in convs_two_pairs]
+                    max_flop_equity = max([HandEvaluator.evaluate_hand([Card(h[0][0], h[0][1]), Card(h[1][0], h[1][1])], conv_board_cards) for h in convs_two_pairs])
                     cmd, (l, u) = get_lower_and_upper_bounds(info["legalActions"][-1])
                     if cmd != "CALL":
                         rand = random.random()
@@ -125,7 +125,7 @@ class Player:
                 elif info['numBoardCards'] == 4:
                     conv_all_cards = []
                     conv_board_cards = convert_list_to_card_list([convert_pbots_hand_to_twohandeval(card, conv) for card in info['boardCards']]) # in Card form
-                    max_flop_equity = [HandEvaluator.evaluate_hand([Card(h[0][0], h[0][1]), Card(h[1][0], h[1][1])], conv_board_cards) for h in convs_two_pairs]
+                    max_flop_equity = max([HandEvaluator.evaluate_hand([Card(h[0][0], h[0][1]), Card(h[1][0], h[1][1])], conv_board_cards) for h in convs_two_pairs])
                     cmd, (l, u) = get_lower_and_upper_bounds(info["legalActions"][-1])
                     if cmd != "CALL":
                         rand = random.random()
@@ -164,7 +164,7 @@ class Player:
                 elif info['numBoardCards'] == 5:
                     conv_all_cards = []
                     conv_board_cards = convert_list_to_card_list([convert_pbots_hand_to_twohandeval(card, conv) for card in info['boardCards']]) # in Card form
-                    max_flop_equity = [HandEvaluator.evaluate_hand([Card(h[0][0], h[0][1]), Card(h[1][0], h[1][1])], conv_board_cards) for h in convs_two_pairs]
+                    max_flop_equity = max([HandEvaluator.evaluate_hand([Card(h[0][0], h[0][1]), Card(h[1][0], h[1][1])], conv_board_cards) for h in convs_two_pairs])
                     cmd, (l, u) = get_lower_and_upper_bounds(info["legalActions"][-1])
                     if cmd != "CALL":
                         rand = random.random()
