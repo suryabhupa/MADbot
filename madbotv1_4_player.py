@@ -53,7 +53,9 @@ class Player:
                     MADBot_delta.append(str(data[-3]))
                     otherbot_delta.append(str(data[-2]))
 
-                hand = data[3:7]
+                info = parse_NEWHAND(data)
+                myBank = info['myBank']
+                hand = info['holeCards']
                 hand_pairs = get_all_pairs(hand)
                 # converts engine's format to pokereval's format
                 converted_hand_pairs = [(convert_pbots_hand_to_twohandeval(hole[0], conv), convert_pbots_hand_to_twohandeval(hole[1], conv)) for hole in hand_pairs]
@@ -62,14 +64,21 @@ class Player:
             elif command == "GETACTION":
                 print 'risk', risk
                 info = parse_GETACTION(data)
+                rand = random.random()
                 if info['numBoardCards'] == 0:
                     l, u = get_lower_and_upper_bounds(info["legalActions"][-1])[1]
-                    if max_preflop_equity >= 0.95:
-                        s.send("RAISE:" + str(u) + "\n")
-                    elif max_preflop_equity >= 0.75:
-                        s.send("CALL\n")
+                    if myBank > -3000:
+                        if max_preflop_equity >= 0.98:
+                            s.send("RAISE:" + str(u) + "\n")
+                        elif max_preflop_equity >= 0.90:
+                            s.send("CALL\n")
+                        else:
+                            s.send("CHECK\n")
                     else:
-                        s.send("CHECK\n")
+                        if rand >= 0.05:
+                            s.send("FOLD\n")
+                        else:
+                            s.send("CHECK\n")
 
                 elif info['numBoardCards'] == 3:
                     conv_all_cards = []
@@ -80,12 +89,12 @@ class Player:
                     if cmd != "CALL":
                         if max_flop_equity >= 0.95:
                             s.send("RAISE:" + str(u) + "\n")
-                        elif max_flop_equity >= 0.85:
+                        elif max_flop_equity >= 0.90:
                             s.send("CALL\n")
                         else:
                             s.send("CHECK\n")
                     else:
-                        if max_flop_equity >= 0.85:
+                        if max_flop_equity >= 0.90:
                             s.send("CALL\n")
                         else:
                             s.send("CHECK\n")
@@ -98,12 +107,12 @@ class Player:
                     if cmd != "CALL":
                         if max_flop_equity >= 0.95:
                             s.send("RAISE:" + str(u) + "\n")
-                        elif max_flop_equity >= 0.85:
+                        elif max_flop_equity >= 0.90:
                             s.send("CALL\n")
                         else:
                             s.send("CHECK\n")
                     else:
-                        if max_flop_equity >= 0.85:
+                        if max_flop_equity >= 0.90:
                             s.send("CALL\n")
                         else:
                             s.send("CHECK\n")
@@ -116,12 +125,12 @@ class Player:
                     if cmd != "CALL":
                         if max_flop_equity >= 0.95:
                             s.send("RAISE:" + str(u) + "\n")
-                        elif max_flop_equity >= 0.85:
+                        elif max_flop_equity >= 0.90:
                             s.send("CALL\n")
                         else:
                             s.send("CHECK\n")
                     else:
-                        if max_flop_equity >= 0.85:
+                        if max_flop_equity >= 0.90:
                             s.send("CALL\n")
                         else:
                             s.send("CHECK\n")
@@ -166,6 +175,7 @@ if __name__ == '__main__':
     PLOT_FLAG = True # Plots the results of the MADBot and other player.
     MADBot_delta = []
     otherbot_delta = []
+
 
     # Create a socket connection to the engine.
     print 'Connecting to %s:%d' % (args.host, args.port)
