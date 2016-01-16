@@ -12,3 +12,6 @@ Fixed bugs in both computation of maximum equity and if/else statements.
 
 ### MADbotv1.3
 New strategy to only fold or call based on thresholds of equity; if the bot plays the hand after flop comes out, it will play till completion. 
+
+### MADbotv1.4
+Same strategy as before; slightly less conserative bot with bounds (that don't seem to work). Uses ``utils.py``. 
