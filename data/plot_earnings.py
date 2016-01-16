@@ -1,21 +1,21 @@
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
-players = ['MADbot', 
-			'Battlecode', 
-			'LeBluff', 
+players = ['0xE29883',
 			'Batman', 
-			'NeverGF', 
-			'0xE29883', 
+			'Battlecode', 
+			'Blackbird', 
+			'd', 
+			# 'GucciPoker', 
+			# 'ladyshark', 
+			'LeBluff',
+			'MADbot',
+			'NeverGF',
 			'Smokaha',
-			'Blackbird',
-			'd',
-			'ladyshark',
-			'GucciPoker',
 			'StraightOuttaCam']
 
-current_player = "StraightOuttaCam"
-hand_log_dir = "HandLogs/"
+current_player = "MADbot"
+hand_log_dir = "HandLogs4/"
 
 
 ##########################################
@@ -27,7 +27,7 @@ hand_log_dir = "HandLogs/"
 
 game_files = [hand_log_dir+current_player+'_vs_'+player for player in players if player != current_player]
 
-pp = PdfPages(current_player+'_night3_game1.pdf')
+pp = PdfPages(current_player+'_night4_game1.pdf')
 
 for game_file in game_files:
 	f = open(game_file, 'r')
@@ -83,7 +83,7 @@ plt.clf()
 
 game_files = [hand_log_dir+player+'_vs_'+current_player for player in players if player != current_player]
 
-pp2 = PdfPages(current_player+'_night3_game2.pdf')
+pp2 = PdfPages(current_player+'_night4_game2.pdf')
 
 for game_file in game_files:
 	f = open(game_file, 'r')
