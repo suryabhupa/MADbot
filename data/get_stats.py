@@ -1,10 +1,13 @@
 from collections import defaultdict
 from pokereval.card import Card
+import numpy as np
+import matplotlib.mlab as mlab
+import matplotlib.pyplot as plt
 
 from pokereval.hand_evaluator import HandEvaluator
 
 def main():
-    game_file = 'HandLogs4/MADbot_vs_d'
+    game_file = 'HandLogs4/MADbot_vs_StraightOuttaCam'
     player_1 = game_file.split('_vs_')[0][10:]
     player_2 = game_file.split('_vs_')[1]
 
@@ -17,6 +20,7 @@ def main():
 
     game_buckets = full_game_string.split('\n\n')[:-1]
     categories = defaultdict(list)
+    winner = defaultdict(list)
 
     # Buckets all of the games into one of 6 categories:
     # (1)full_game (players show their cards)
@@ -36,65 +40,107 @@ def main():
                 categories['fold_before_flop'] += [game]
         elif player_2 + " folds" in game:
             categories['opponent_folds'] += [game]
+        if player_1 + " wins the pot" in game:
+            winner[player_1].append(game)
+        else:
+            winner[player_2].append(game)
 
 
+    preflops = []
     p1_equities = []
-    p2_equities = []
-    player_1_wins,player_2_wins,ties = 0,0,0
-
-    for value in categories.values():
-        print len(value)
-
-    for game in categories['full_game']:
+    for game in winner[player_1]:
+        if game not in categories['full_game']:
+            continue
         player_1_hand, player_2_hand = get_players_hands(game, player_1, player_2)
+        
+        # Getting pre-flop statistics
+        # max_preflop = max([HandEvaluator.evaluate_hand([Card(h[0][0], h[0][1]), Card(h[1][0], h[1][1])], []) for h in player_1_hand])
+        # preflops.append(max_preflop)
+
+        # Getting post-flop statistics
+
         game = game[game.index("*** RIVER ***"):]
         table_cards = game[game.index("[")+1:game.index("[")+12].split()
         table_cards_last = game[game.index("]")+3:game.index("]")+5].split()
+        # table_cards = game[game.index("[")+1:game.index("[")+9].split()
+        # table_cards_last = game[game.index("]")+3:game.index("]")+5].split()
         table_cards = table_cards + table_cards_last
-        # print "Table card: ",table_cards
 
-        conv = create_pbots_hand_to_twohandeval_dict()        
+
+        conv = create_pbots_hand_to_twohandeval_dict()
         converted_board_cards = convert_list_to_card_list([convert_pbots_hand_to_twohandeval(card) for card in table_cards]) # in pbotseval form
-
         max_flop_equity = max([HandEvaluator.evaluate_hand([Card(h[0][0], h[0][1]), Card(h[1][0], h[1][1])], converted_board_cards) for h in player_1_hand])
+        # if max_flop_equity > 0.99:
+        #     print table_cards
+        #     print player_1_hand
+        #     print [HandEvaluator.evaluate_hand([Card(h[0][0], h[0][1]), Card(h[1][0], h[1][1])], converted_board_cards) for h in player_1_hand]
+        #     print player_2_hand
+        #     print [HandEvaluator.evaluate_hand([Card(h[0][0], h[0][1]), Card(h[1][0], h[1][1])], converted_board_cards) for h in player_2_hand]
         p1_equities.append(max_flop_equity)
-        max_flop_equity2 = max([HandEvaluator.evaluate_hand([Card(h[0][0], h[0][1]), Card(h[1][0], h[1][1])], converted_board_cards) for h in player_2_hand])
-        p2_equities.append(max_flop_equity2)
+
+
+    print len(p1_equities)
+    n, bins, patches = plt.hist(p1_equities, 100, normed=1, facecolor='green', alpha=0.75)
+    plt.title('We won post river')
+    plt.show()
+
+
+
+    # p1_equities = []
+    # p2_equities = []
+    # player_1_wins,player_2_wins,ties = 0,0,0
+
+    # for key,value in categories.items():
+    #     print key,len(value)
+
+    # for game in categories['full_game']:
+    #     player_1_hand, player_2_hand = get_players_hands(game, player_1, player_2)
+    #     game = game[game.index("*** RIVER ***"):]
+    #     table_cards = game[game.index("[")+1:game.index("[")+12].split()
+    #     table_cards_last = game[game.index("]")+3:game.index("]")+5].split()
+    #     table_cards = table_cards + table_cards_last
+    #     # print "Table card: ",table_cards
+
+    #     conv = create_pbots_hand_to_twohandeval_dict()        
+    #     converted_board_cards = convert_list_to_card_list([convert_pbots_hand_to_twohandeval(card) for card in table_cards]) # in pbotseval form
+
+    #     max_flop_equity = max([HandEvaluator.evaluate_hand([Card(h[0][0], h[0][1]), Card(h[1][0], h[1][1])], converted_board_cards) for h in player_1_hand])
+    #     p1_equities.append(max_flop_equity)
+    #     max_flop_equity2 = max([HandEvaluator.evaluate_hand([Card(h[0][0], h[0][1]), Card(h[1][0], h[1][1])], converted_board_cards) for h in player_2_hand])
+    #     p2_equities.append(max_flop_equity2)
         
 
-        if player_1 + " wins the pot" in game:
-            player_1_wins += 1
-        elif player_2 + " wins the pot" in game:
-            player_2_wins += 1
-        elif player_1 + " ties for the pot" in game:
-            ties += 1
+    #     if player_1 + " wins the pot" in game:
+    #         player_1_wins += 1
+    #     elif player_2 + " wins the pot" in game:
+    #         player_2_wins += 1
+    #     elif player_1 + " ties for the pot" in game:
+    #         ties += 1
 
-    print sum(p1_equities)/float(len(p1_equities))
-    print sum(p2_equities)/float(len(p2_equities))
+    # print sum(p1_equities)/float(len(p1_equities))
+    # print sum(p2_equities)/float(len(p2_equities))
 
-    print player_1_wins
-    print player_2_wins
-    print ties
+    # print player_1_wins
+    # print player_2_wins
+    # print ties
 
         # print max_flop_equity
         # print max_flop_equity2
 
 
-
-
 def get_players_hands(game, player_1, player_2):
     """
     game: one game represented as a string
-    Return: all pair of hands in both players as Card instances
+    Return: all pair of hands in both players after conv
     """
-    index_1 = game.index(player_1+" shows [")
-    player_1_hand = game[index_1+len(player_1) + 8: index_1+len(player_1)+ 19].split()
+    index_1 = game.index('Dealt to ' + player_1)
+    player_1_hand = game[index_1+len(player_1) + 11: index_1+len(player_1)+ 23].split()
     # print "Player 1 hand: ", player_1_hand
     player_1_hand = [convert_pbots_hand_to_twohandeval(hand) for hand in player_1_hand]
     player_1_hand = [(card[0],card[1]) for card in player_1_hand]
 
-    index_2 = game.index(player_2+" shows [")
-    player_2_hand = game[index_2+len(player_2) + 8: index_2+len(player_2)+ 19].split()
+    index_2 = game.index('Dealt to ' + player_2)
+    player_2_hand = game[index_2+len(player_2) + 11: index_2+len(player_2)+ 23].split()
     # print "Player 2 hand: ", player_2_hand
     player_2_hand = [convert_pbots_hand_to_twohandeval(hand) for hand in player_2_hand]
     player_2_hand = [(card[0],card[1]) for card in player_2_hand]
@@ -111,11 +157,6 @@ def get_post_river_cards(game):
     Return: 
     """
     return 0
-
-
-
-
-
 
 def get_all_pairs(hand):
     """

@@ -5,17 +5,18 @@ players = ['0xE29883',
 			'Batman', 
 			'Battlecode', 
 			'Blackbird', 
-			'd', 
+			# 'd', 
 			# 'GucciPoker', 
 			# 'ladyshark', 
 			'LeBluff',
 			'MADbot',
 			'NeverGF',
+			'NonAmericanDream',
 			'Smokaha',
 			'StraightOuttaCam']
 
 current_player = "MADbot"
-hand_log_dir = "HandLogs4/"
+hand_log_dir = "HandLogs7/"
 
 
 ##########################################
@@ -27,7 +28,7 @@ hand_log_dir = "HandLogs4/"
 
 game_files = [hand_log_dir+current_player+'_vs_'+player for player in players if player != current_player]
 
-pp = PdfPages(current_player+'_night4_game1.pdf')
+pp = PdfPages(current_player+'_night7_game1.pdf')
 
 for game_file in game_files:
 	f = open(game_file, 'r')
@@ -83,7 +84,7 @@ plt.clf()
 
 game_files = [hand_log_dir+player+'_vs_'+current_player for player in players if player != current_player]
 
-pp2 = PdfPages(current_player+'_night4_game2.pdf')
+pp2 = PdfPages(current_player+'_night7_game2.pdf')
 
 for game_file in game_files:
 	f = open(game_file, 'r')

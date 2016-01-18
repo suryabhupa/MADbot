@@ -48,12 +48,12 @@ class Player:
                 max_preflop_equity, max_flop_equity = 0, 0 # Flush all equities
 
             elif command == "NEWHAND":
+                if PLOT_FLAG == True:
+                    MADBot_delta.append(str(data[-3]))
+                    otherbot_delta.append(str(data[-2]))
+
                 info = parse_NEWHAND(data)
                 myBank = info['myBank']
-                if PLOT_FLAG == True:
-                    MADBot_delta.append(myBank)
-                    otherbot_delta.append(info['otherBank'])
-
                 hand = info['holeCards']
                 hand_pairs = get_all_pairs(hand)
                 # converts engine's format to pokereval's format
@@ -181,6 +181,7 @@ if __name__ == '__main__':
     PLOT_FLAG = True # Plots the results of the MADBot and other player.
     MADBot_delta = []
     otherbot_delta = []
+
 
     # Create a socket connection to the engine.
     print 'Connecting to %s:%d' % (args.host, args.port)
