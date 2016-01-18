@@ -3,7 +3,6 @@ import socket
 import sys
 import random
 import math
-# import matplotlib.pyplot as plt
 
 from pokereval.card import Card
 from pokereval.hand_evaluator import HandEvaluator
@@ -66,17 +65,19 @@ class Player:
                 info = parse_GETACTION(data)
                 rand = random.random()
                 if info['numBoardCards'] == 0:
+                    safe = myBank > -3000
                     l, u = get_lower_and_upper_bounds(info["legalActions"][-1])[1]
-                    if myBank > -3000:
-                        if max_preflop_equity >= 0.90:
-                            s.send("RAISE:" + str(u) + "\n")
-                        elif max_preflop_equity >= 0.50:
-                            s.send("CALL\n")
-                        else:
+                    if safe:
+                        if info['potSize'] > 50:
                             s.send("CHECK\n")
+                        else:
+                            if max_preflop_equity > 0.99:
+                                if rand >= 0.4:
+                                    s.send("RAISE:" + str(l) + "\n")
+                            s.send("CALL\n")
                     else:
-                        if rand >= 0.05:
-                            s.send("FOLD\n")
+                        if max_preflop_equity >= 0.99 and info['potSize'] < 50:
+                            s.send("CALL\n")
                         else:
                             s.send("CHECK\n")
 
@@ -87,9 +88,14 @@ class Player:
                     max_flop_equity = max([HandEvaluator.evaluate_hand([Card(h[0][0], h[0][1]), Card(h[1][0], h[1][1])], converted_board_cards) for h in converted_hand_pairs])
                     cmd, (l, u) = get_lower_and_upper_bounds(info["legalActions"][-1])
                     if cmd != "CALL":
-                        if max_flop_equity >= 0.95:
+                        if max_flop_equity >= 0.97:
                             s.send("RAISE:" + str(u) + "\n")
                         elif max_flop_equity >= 0.90:
+                            if rand > 0.5:
+                                s.send("RAISE:" + str(l) + "\n")
+                            else:
+                                s.send("CALL\n")
+                        elif max_flop_equity >= 0.80:
                             s.send("CALL\n")
                         else:
                             s.send("CHECK\n")
