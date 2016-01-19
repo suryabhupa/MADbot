@@ -94,9 +94,9 @@ def parse_GETACTION(data):
     info['timebank'] = float(data[-1])
     return info
 
-def parse_NEWACTION(data):
+def parse_NEWGAME(data):
     """
-    parse the NEWACTION line from engine
+    parse the NEWGAME line from engine
     return dictionary of all elements in the line
     """
     info = dict()
