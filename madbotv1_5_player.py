@@ -48,12 +48,12 @@ class Player:
                 max_preflop_equity, max_flop_equity = 0, 0 # Flush all equities
 
             elif command == "NEWHAND":
-                if PLOT_FLAG == True:
-                    MADBot_delta.append(str(data[-3]))
-                    otherbot_delta.append(str(data[-2]))
-
                 info = parse_NEWHAND(data)
                 myBank = info['myBank']
+                if PLOT_FLAG == True:
+                    MADBot_delta.append(myBank)
+                    otherbot_delta.append(info['otherBank'])
+
                 hand = info['holeCards']
                 hand_pairs = get_all_pairs(hand)
                 # converts engine's format to pokereval's format
@@ -61,7 +61,6 @@ class Player:
                 max_preflop_equity = max([HandEvaluator.evaluate_hand([Card(h[0][0], h[0][1]), Card(h[1][0], h[1][1])], []) for h in converted_hand_pairs])
 
             elif command == "GETACTION":
-                print 'risk', risk
                 info = parse_GETACTION(data)
                 rand = random.random()
                 if info['numBoardCards'] == 0:
@@ -89,10 +88,15 @@ class Player:
                     cmd, (l, u) = get_lower_and_upper_bounds(info["legalActions"][-1])
                     if cmd != "CALL":
                         if max_flop_equity >= 0.97:
-                            s.send("RAISE:" + str(u) + "\n")
+                            if rand > 0.7:
+                                s.send(cmd+":" + str(u) + "\n")
+                            elif rand > 0.3:
+                                s.send(cmd+":" + str(l) + "\n")
+                            else:
+                                s.send("CALL\n")
                         elif max_flop_equity >= 0.90:
                             if rand > 0.5:
-                                s.send("RAISE:" + str(l) + "\n")
+                                s.send(cmd+":" + str(l) + "\n")
                             else:
                                 s.send("CALL\n")
                         elif max_flop_equity >= 0.80:
@@ -111,13 +115,18 @@ class Player:
                     max_flop_equity = max([HandEvaluator.evaluate_hand([Card(h[0][0], h[0][1]), Card(h[1][0], h[1][1])], converted_board_cards) for h in converted_hand_pairs])
                     cmd, (l, u) = get_lower_and_upper_bounds(info["legalActions"][-1])
                     if cmd != "CALL":
-                        if max_flop_equity >= 0.95:
-                            s.send("RAISE:" + str(u) + "\n")
+                        if max_flop_equity >= 0.96:
+                            if rand > 0.5:
+                                s.send(cmd+":" + str(u) + "\n")
+                            else:
+                                s.send("CALL\n")
                         elif max_flop_equity >= 0.90:
                             s.send("CALL\n")
                         else:
                             s.send("CHECK\n")
                     else:
+                        print "PRINTING THE COMMANDDDDDD"
+                        print cmd
                         if max_flop_equity >= 0.90:
                             s.send("CALL\n")
                         else:
@@ -130,12 +139,14 @@ class Player:
                     cmd, (l, u) = get_lower_and_upper_bounds(info["legalActions"][-1])
                     if cmd != "CALL":
                         if max_flop_equity >= 0.95:
-                            s.send("RAISE:" + str(u) + "\n")
+                            s.send(cmd+":" + str(u) + "\n")
                         elif max_flop_equity >= 0.90:
                             s.send("CALL\n")
                         else:
                             s.send("CHECK\n")
                     else:
+                        print "PRINTING THE COMMANDDDDDD"
+                        print cmd
                         if max_flop_equity >= 0.90:
                             s.send("CALL\n")
                         else:
@@ -167,9 +178,9 @@ class Player:
         # Clean up the socket.
         print MADBot_delta
         print otherbot_delta
-        print "\n".join(MADBot_delta)
-        print "=================================================="
-        print "\n".join(otherbot_delta)
+        # print "\n".join(MADBot_delta)
+        # print "=================================================="
+        # print "\n".join(otherbot_delta)
         s.close()
 
 if __name__ == '__main__':
@@ -181,7 +192,6 @@ if __name__ == '__main__':
     PLOT_FLAG = True # Plots the results of the MADBot and other player.
     MADBot_delta = []
     otherbot_delta = []
-
 
     # Create a socket connection to the engine.
     print 'Connecting to %s:%d' % (args.host, args.port)
