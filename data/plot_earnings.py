@@ -3,7 +3,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 players = ['0xE29883',
 			'Batman', 
-			'Battlecode', 
+			'HalstonTaylor', 
 			# 'Blackbird', 
 			# 'd', 
 			# 'GucciPoker', 
@@ -16,7 +16,7 @@ players = ['0xE29883',
 			'StraightOuttaCam']
 
 current_player = "MADbot"
-hand_log_dir = "HandLogs8/"
+hand_log_dir = "HandLogs9/"
 
 
 ##########################################
@@ -28,7 +28,7 @@ hand_log_dir = "HandLogs8/"
 
 game_files = [hand_log_dir+current_player+'_vs_'+player for player in players if player != current_player]
 
-pp = PdfPages(current_player+'_night8_game1.pdf')
+pp = PdfPages(current_player+'_night9_game1.pdf')
 
 for game_file in game_files:
 	f = open(game_file, 'r')
@@ -84,7 +84,7 @@ plt.clf()
 
 game_files = [hand_log_dir+player+'_vs_'+current_player for player in players if player != current_player]
 
-pp2 = PdfPages(current_player+'_night8_game2.pdf')
+pp2 = PdfPages(current_player+'_night9_game2.pdf')
 
 for game_file in game_files:
 	f = open(game_file, 'r')
