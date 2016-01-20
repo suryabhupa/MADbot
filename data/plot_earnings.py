@@ -4,7 +4,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 players = ['0xE29883',
 			'Batman', 
 			'HalstonTaylor', 
-			# 'Blackbird', 
+			'Battlecode', 
 			# 'd', 
 			# 'GucciPoker', 
 			'ladyshark', 
