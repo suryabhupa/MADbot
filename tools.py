@@ -8,9 +8,81 @@ import socket
 import sys
 import random
 import math
+import numpy
 
 from pokereval.card import Card
 from pokereval.hand_evaluator import HandEvaluator
+
+def get_omaha_features(hand, table_cards, convolution_function, play = 'river'):
+    # hand_p1: list representation of n hands for player one e.g., ['Kc','Ac','6c','7h']
+    # returns features for Omaha variant
+
+    all_pairs = [[hand[0], hand[1]], [hand[0], hand[2]], [hand[0], hand[3]], [hand[1], hand[2]], [hand[1], hand[3]], [hand[2], hand[3]]]
+
+    card_sets = [two_cards + table_cards for two_cards in all_pairs]
+
+    features = numpy.array([hand_to_features(cards, convolution_function, play = play).reshape(27,) for cards in card_sets])
+    features = numpy.amax(features, axis = 0)
+
+    return features
+
+
+def hand_to_features(hand, convolution_function, play = 'river'):
+    # hand: list representation of n hands e.g., ['Kc','Ac','6c','7h']
+    # returns the output of the filters 
+
+    diction = {'river': 7, 'turn': 6, 'flop': 5}
+    flush_filter = numpy.ones((1,13))
+    vertical_filter = numpy.ones((4,1))
+    horizontal_filter = numpy.ones((1,5))
+
+    if play not in diction.keys():
+        print "play must be river, turn or flop"
+        quit()
+    hand_matrix = string_to_vector(hand)
+
+    column_sums = numpy.sum(hand_matrix, axis=0)
+    column_sums[column_sums > 1] = 1
+    column_sums = column_sums.reshape((1,14))
+    stripped_hand_matrix = numpy.delete(hand_matrix,0,1)
+
+    straight_features = convolution_function(column_sums, horizontal_filter)
+    straight_features_normalized = numpy.true_divide(straight_features, 5)
+    two_three_four_features = convolution_function(stripped_hand_matrix, vertical_filter)
+    two_three_four_features_normalized = numpy.true_divide(two_three_four_features, 4)
+    flush_features = convolution_function(stripped_hand_matrix, flush_filter).T
+    flush_features_normalized = numpy.true_divide(flush_features, diction[play])
+
+    return numpy.concatenate((straight_features_normalized, flush_features_normalized, two_three_four_features_normalized), axis = 1)
+
+
+def get_conversion():
+    """
+    create dictionary used in the conversion from hand string to number
+    """
+    return {r:i for i,r in enumerate('23456789TJQKA', start=2)}
+
+def string_to_vector(hand):
+    # hand: list representation of n hands e.g., ['Kc','Ac','6c','7h']
+    # return (n+1) matrix (vectorized) of 0's and 1's as numpy array
+    conv = get_conversion()
+
+    keyed_by_suit = {'c': [0 for i in range(14)],
+                    'h': [0 for i in range(14)],
+                    'd': [0 for i in range(14)],
+                    's': [0 for i in range(14)]}
+    for value,suit in hand:
+        value = conv[value]
+        if value == 14:
+            keyed_by_suit[suit][0] = 1.
+        keyed_by_suit[suit][value-1] = 1.
+
+    final_vector = []
+    for value in keyed_by_suit.values():
+        final_vector.append(value)
+
+    return numpy.asarray(final_vector)
+
 
 def convert_hole_cards_to_card_pairs(hand, conv):
     """

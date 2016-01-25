@@ -2,21 +2,32 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
 players = ['0xE29883',
-			'Batman', 
+			'Baker3W',
+			'Batman',
+			'Battlecode',
+			'Cambot',
+			'Checkmate', 
+			'Evangelion', 
+			'Frendan',
+			'GucciPoker',
 			'HalstonTaylor', 
-			'Battlecode', 
-			# 'd', 
-			# 'GucciPoker', 
-			'ladyshark', 
+			'IHTFG',
+			'kkzpokerbot',
+			'ladyshark',
+			'Learning',
 			'LeBluff',
 			'MADbot',
 			'NeverGF',
-			# 'NonAmericanDream',
-			# 'Smokaha',
-			'StraightOuttaCam']
+			'OGRoomies',
+			'Pokermon',
+			'QuantumPoker',
+			'Ripka',
+			'Smokaha',
+			'StraightOuttaCam',
+			'TheLuck']
 
 current_player = "MADbot"
-hand_log_dir = "HandLogs9/"
+hand_log_dir = "HandLongsMini/"
 
 
 ##########################################

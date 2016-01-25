@@ -3,10 +3,32 @@ import socket
 import sys
 import random
 import math
+import numpy
 
 from pokereval.card import Card
 from pokereval.hand_evaluator import HandEvaluator
 from tools import *
+
+## Neural Network Imports
+
+sys.path.append('./pdnn')
+from models.dnn import DNN
+from io_func.model_io import _file2nnet
+from io_func import smart_open
+import cPickle
+import theano
+from theano.tensor.signal import conv
+import theano.tensor as T
+
+
+numpy_rng = numpy.random.RandomState(101)
+
+# CODE BELOW NEEDED TO MAKE CONVOLUTIONS WITH THEANO
+input = T.dmatrix('input')
+filter = T.dmatrix('filter')
+conv_out = conv.conv2d(input, filter)
+convolution_function = theano.function([input, filter], conv_out)
+#################################################
 
 """
 Simple example pokerbot, written in python.
@@ -15,8 +37,35 @@ This is an example of a bare bones pokerbot. It only sets up the socket
 necessary to connect with the engine and then always returns the same action.
 It is meant as an example of how a pokerbot should communicate with the engine.
 """
+
+def load_flop_network(nnet_param = 'flop_network_params', nnet_cfg = 'flop_network_cfg'):
+    cfg = cPickle.load(smart_open(nnet_cfg,'r'))
+    cfg.init_activation()
+    model = DNN(numpy_rng=numpy_rng, cfg = cfg)
+    _file2nnet(model.layers, filename = nnet_param)
+    get_flop_probs = model.build_extract_feat_function(-1)
+    return get_flop_probs
+
+def load_turn_network(nnet_param = 'turn_network_params', nnet_cfg = 'turn_network_cfg'):
+    cfg = cPickle.load(smart_open(nnet_cfg,'r'))
+    cfg.init_activation()
+    model = DNN(numpy_rng=numpy_rng, cfg = cfg)
+    _file2nnet(model.layers, filename = nnet_param)
+    get_turn_probs = model.build_extract_feat_function(-1)
+    return get_turn_probs
+
+
+def load_river_network(nnet_param = 'river_network_params', nnet_cfg = 'river_network_cfg'):
+    cfg = cPickle.load(smart_open(nnet_cfg,'r'))
+    cfg.init_activation()
+    model = DNN(numpy_rng=numpy_rng, cfg = cfg)
+    _file2nnet(model.layers, filename = nnet_param)
+    get_river_probs = model.build_extract_feat_function(-1)
+    return get_river_probs
+
+
 class Player:
-    def run(self, input_socket):
+    def run(self, input_socket, get_flop_probs, get_turn_probs, get_river_probs):
         # Get a file-object for reading packets from the socket.
         # Using this ensures that you get exactly one packet per read.
         f_in = input_socket.makefile()
@@ -32,13 +81,6 @@ class Player:
             # Here is where you should implement code to parse the packets from
             # the engine and act on it. We are just printing it instead.
             print data
-
-            # When appropriate, reply to the engine with a legal action.
-            # The engine will ignore all spurious responses.
-            # The engine will also check/fold for you if you return an
-            # illegal action.
-            # When sending responses, terminate each response with a newline
-            # character (\n) or your bot will hang!
             data = data.split() # Split data into list
             command = data[0]
 
@@ -81,71 +123,86 @@ class Player:
                             s.send("CHECK\n")
 
                 elif info['numBoardCards'] == 3:
-                    conv_all_cards = []
-                    # converts engine's format to pokereval's format
-                    converted_board_cards = convert_list_to_card_list([convert_pbots_hand_to_twohandeval(card, conv) for card in info['boardCards']]) # in Card form
-                    max_flop_equity = max([HandEvaluator.evaluate_hand([Card(h[0][0], h[0][1]), Card(h[1][0], h[1][1])], converted_board_cards) for h in converted_hand_pairs])
+                    table_cards = info['boardCards']
+                    features = get_omaha_features(hand, table_cards, convolution_function, play = 'flop')
+                    probs = get_turn_probs(features.reshape(1,27))[0]
+                    prob_winning = probs[0]
                     cmd, (l, u) = get_lower_and_upper_bounds(info["legalActions"][-1])
                     if cmd != "CALL":
-                        if max_flop_equity >= 0.97:
+                        if prob_winning >= 0.7:
                             if rand > 0.7:
                                 s.send(cmd+":" + str(u) + "\n")
                             elif rand > 0.3:
                                 s.send(cmd+":" + str(l) + "\n")
                             else:
                                 s.send("CALL\n")
-                        elif max_flop_equity >= 0.90:
+                        elif prob_winning >= 0.6:
                             if rand > 0.5:
                                 s.send(cmd+":" + str(l) + "\n")
                             else:
                                 s.send("CALL\n")
-                        elif max_flop_equity >= 0.80:
+                        elif prob_winning >= 0.5:
                             s.send("CALL\n")
                         else:
                             s.send("CHECK\n")
                     else:
-                        if max_flop_equity >= 0.90:
+                        if prob_winning >= 0.7:
                             s.send("CALL\n")
                         else:
                             s.send("CHECK\n")
 
                 elif info['numBoardCards'] == 4:
-                    conv_all_cards = []
-                    converted_board_cards = convert_list_to_card_list([convert_pbots_hand_to_twohandeval(card, conv) for card in info['boardCards']]) # in Card form
-                    max_flop_equity = max([HandEvaluator.evaluate_hand([Card(h[0][0], h[0][1]), Card(h[1][0], h[1][1])], converted_board_cards) for h in converted_hand_pairs])
+                    table_cards = info['boardCards']
+                    features = get_omaha_features(hand, table_cards, convolution_function, play = 'turn')
+                    probs = get_turn_probs(features.reshape(1,27))[0]
+                    prob_winning = probs[0]
+
                     cmd, (l, u) = get_lower_and_upper_bounds(info["legalActions"][-1])
                     if cmd != "CALL":
-                        if max_flop_equity >= 0.96:
+                        if prob_winning >= 0.75:
                             if rand > 0.5:
                                 s.send(cmd+":" + str(u) + "\n")
                             else:
                                 s.send("CALL\n")
-                        elif max_flop_equity >= 0.90:
+                        elif prob_winning >= 0.5:
                             s.send("CALL\n")
                         else:
                             s.send("CHECK\n")
                     else:
-                        print "PRINTING THE COMMANDDDDDD"
-                        print cmd
-                        if max_flop_equity >= 0.90:
+                        if prob_winning >= 0.65:
                             s.send("CALL\n")
                         else:
                             s.send("CHECK\n")
 
                 elif info['numBoardCards'] == 5:
-                    conv_all_cards = []
-                    conv_board_cards = convert_list_to_card_list([convert_pbots_hand_to_twohandeval(card, conv) for card in info['boardCards']]) # in Card form
-                    max_flop_equity = max([HandEvaluator.evaluate_hand([Card(h[0][0], h[0][1]), Card(h[1][0], h[1][1])], conv_board_cards) for h in converted_hand_pairs])
+                    table_cards = info['boardCards']
+                    features = get_omaha_features(hand, table_cards, convolution_function, play = 'river')
+                    probs = get_turn_probs(features.reshape(1,27))[0]
+                    prob_winning = probs[0]
+                    print "###### TURN #####"
+                    print hand
+                    print table_cards
+                    print prob_winning
+
                     cmd, (l, u) = get_lower_and_upper_bounds(info["legalActions"][-1])
                     if cmd != "CALL":
-                        if max_flop_equity >= 0.95:
+                        if prob_winning >= 0.8:
                             s.send(cmd+":" + str(u) + "\n")
-                        elif max_flop_equity >= 0.90:
+                        elif prob_winning >= 0.7:
+                            s.send(cmd+":" + str(l) + "\n")
+                        elif prob_winning >= 0.6:
+                            if rand < 0.2:
+                                s.send(cmd+":" + str(u) + "\n")
+                            elif rand < 0.6:
+                                s.send(cmd+":" + str(l) + "\n")
+                            else:
+                                s.send("CALL\n")
+                        elif prob_winning >= 0.5:
                             s.send("CALL\n")
                         else:
                             s.send("CHECK\n")
                     else:
-                        if max_flop_equity >= 0.90:
+                        if prob_winning >= 0.5:
                             s.send("CALL\n")
                         else:
                             s.send("CHECK\n")
@@ -173,6 +230,7 @@ class Player:
                 # max_preflop_equity, max_flop_equity, max_turn_equity, max_river_equity = 0, 0, 0, 0 # Flush all equities
                 max_preflop_equity, max_flop_equity = 0, 0
 
+
         # Clean up the socket.
         print MADBot_delta
         print otherbot_delta
@@ -191,6 +249,8 @@ if __name__ == '__main__':
     MADBot_delta = []
     otherbot_delta = []
 
+    get_flop_probs, get_turn_probs, get_river_probs = load_flop_network(), load_turn_network(), load_river_network()
+
     # Create a socket connection to the engine.
     print 'Connecting to %s:%d' % (args.host, args.port)
     try:
@@ -200,4 +260,4 @@ if __name__ == '__main__':
         exit()
 
     bot = Player()
-    bot.run(s)
+    bot.run(s,get_flop_probs, get_turn_probs, get_river_probs)

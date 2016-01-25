@@ -6,7 +6,7 @@ import math
 
 from pokereval.card import Card
 from pokereval.hand_evaluator import HandEvaluator
-from utils import *
+from tools import *
 
 """
 Simple example pokerbot, written in python.

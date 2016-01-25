@@ -1,1 +1,1 @@
-python Player.py "$@"
+python NeuralPlayer.py "$@"
