@@ -40,7 +40,7 @@ hand_log_dir = "HandLongsMini/"
 # game_files = [hand_log_dir+current_player+'_vs_'+player for player in players if player != current_player]
 player1 = 'mini'
 player2 = 'MADbot'
-game_files = ['../../'+player1+'_'+player2+'-2.txt']
+game_files = ['../../'+player1+'_'+player2+'.txt']
 
 # pp = PdfPages(current_player+'_night9_game1.pdf')
 

@@ -46,7 +46,7 @@ def get_preflop_opening(game, little_blind_player, big_blind_player):
 
 for playa in players:
 	player1 = playa
-	player2 = 'MADbot'
+	player2 = 'Neural'
 	# gamefile = 'HandLongsMini/'+player1+'_vs_'+player2
 	gamefile = '../../mini_MADbot.txt'
 
