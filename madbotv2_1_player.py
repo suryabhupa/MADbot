@@ -127,21 +127,43 @@ class Player:
                     features = get_omaha_features(hand, table_cards, convolution_function, play = 'flop')
                     probs = get_turn_probs(features.reshape(1,27))[0]
                     prob_winning = probs[0]
+                    print "###### FLOP #####"
+                    print hand
+                    print table_cards
+                    print prob_winning
                     cmd, (l, u) = get_lower_and_upper_bounds(info["legalActions"][-1])
-                    if cmd != "CALL":
-                        if prob_winning >= 0.7:
-                            if rand > 0.7:
+                    if cmd == 'BET':
+                        if prob_winning >= 0.65:
+                            if rand > 0.3:
                                 s.send(cmd+":" + str(u) + "\n")
-                            elif rand > 0.3:
-                                s.send(cmd+":" + str(l) + "\n")
                             else:
-                                s.send("CALL\n")
+                                s.send(cmd+":" + str(l) + "\n")
                         elif prob_winning >= 0.6:
-                            if rand > 0.5:
+                            if rand < 0.2:
+                                s.send(cmd+":" + str(u) + "\n")
+                            elif rand < 0.6:
                                 s.send(cmd+":" + str(l) + "\n")
                             else:
                                 s.send("CALL\n")
                         elif prob_winning >= 0.5:
+                            s.send("CALL\n")
+                        else:
+                            s.send("CHECK\n")
+
+                    elif cmd == 'RAISE':
+                        if prob_winning >= 0.85:
+                            if rand > 0.3:
+                                s.send(cmd+":" + str(u) + "\n")
+                            else:
+                                s.send(cmd+":" + str(l) + "\n")
+                        elif prob_winning >= 0.8:
+                            if rand < 0.2:
+                                s.send(cmd+":" + str(u) + "\n")
+                            elif rand < 0.6:
+                                s.send(cmd+":" + str(l) + "\n")
+                            else:
+                                s.send("CALL\n")
+                        elif prob_winning >= 0.7:
                             s.send("CALL\n")
                         else:
                             s.send("CHECK\n")
@@ -156,40 +178,18 @@ class Player:
                     features = get_omaha_features(hand, table_cards, convolution_function, play = 'turn')
                     probs = get_turn_probs(features.reshape(1,27))[0]
                     prob_winning = probs[0]
-
-                    cmd, (l, u) = get_lower_and_upper_bounds(info["legalActions"][-1])
-                    if cmd != "CALL":
-                        if prob_winning >= 0.75:
-                            if rand > 0.5:
-                                s.send(cmd+":" + str(u) + "\n")
-                            else:
-                                s.send("CALL\n")
-                        elif prob_winning >= 0.5:
-                            s.send("CALL\n")
-                        else:
-                            s.send("CHECK\n")
-                    else:
-                        if prob_winning >= 0.65:
-                            s.send("CALL\n")
-                        else:
-                            s.send("CHECK\n")
-
-                elif info['numBoardCards'] == 5:
-                    table_cards = info['boardCards']
-                    features = get_omaha_features(hand, table_cards, convolution_function, play = 'river')
-                    probs = get_turn_probs(features.reshape(1,27))[0]
-                    prob_winning = probs[0]
                     print "###### TURN #####"
                     print hand
                     print table_cards
                     print prob_winning
 
                     cmd, (l, u) = get_lower_and_upper_bounds(info["legalActions"][-1])
-                    if cmd != "CALL":
-                        if prob_winning >= 0.8:
-                            s.send(cmd+":" + str(u) + "\n")
-                        elif prob_winning >= 0.7:
-                            s.send(cmd+":" + str(l) + "\n")
+                    if cmd == 'BET':
+                        if prob_winning >= 0.65:
+                            if rand > 0.3:
+                                s.send(cmd+":" + str(u) + "\n")
+                            else:
+                                s.send(cmd+":" + str(l) + "\n")
                         elif prob_winning >= 0.6:
                             if rand < 0.2:
                                 s.send(cmd+":" + str(u) + "\n")
@@ -201,8 +201,79 @@ class Player:
                             s.send("CALL\n")
                         else:
                             s.send("CHECK\n")
+
+                    elif cmd == 'RAISE':
+                        if prob_winning >= 0.85:
+                            if rand > 0.3:
+                                s.send(cmd+":" + str(u) + "\n")
+                            else:
+                                s.send(cmd+":" + str(l) + "\n")
+                        elif prob_winning >= 0.8:
+                            if rand < 0.2:
+                                s.send(cmd+":" + str(u) + "\n")
+                            elif rand < 0.6:
+                                s.send(cmd+":" + str(l) + "\n")
+                            else:
+                                s.send("CALL\n")
+                        elif prob_winning >= 0.7:
+                            s.send("CALL\n")
+                        else:
+                            s.send("CHECK\n")
                     else:
-                        if prob_winning >= 0.5:
+                        if prob_winning >= 0.7:
+                            s.send("CALL\n")
+                        else:
+                            s.send("CHECK\n")
+
+                elif info['numBoardCards'] == 5:
+                    table_cards = info['boardCards']
+                    features = get_omaha_features(hand, table_cards, convolution_function, play = 'river')
+                    probs = get_turn_probs(features.reshape(1,27))[0]
+                    prob_winning = probs[0]
+                    print "###### RIVER #####"
+                    print hand
+                    print table_cards
+                    print prob_winning
+
+                    cmd, (l, u) = get_lower_and_upper_bounds(info["legalActions"][-1])
+                    print cmd
+                    if cmd == 'BET':
+                        if prob_winning >= 0.75:
+                            if rand > 0.3:
+                                s.send(cmd+":" + str(u) + "\n")
+                            else:
+                                s.send(cmd+":" + str(l) + "\n")
+                        elif prob_winning >= 0.7:
+                            if rand < 0.2:
+                                s.send(cmd+":" + str(u) + "\n")
+                            elif rand < 0.6:
+                                s.send(cmd+":" + str(l) + "\n")
+                            else:
+                                s.send("CALL\n")
+                        elif prob_winning >= 0.6:
+                            s.send("CALL\n")
+                        else:
+                            s.send("CHECK\n")
+
+                    elif cmd == 'RAISE':
+                        if prob_winning >= 0.9:
+                            if rand > 0.3:
+                                s.send(cmd+":" + str(u) + "\n")
+                            else:
+                                s.send(cmd+":" + str(l) + "\n")
+                        elif prob_winning >= 0.75:
+                            if rand < 0.2:
+                                s.send(cmd+":" + str(u) + "\n")
+                            elif rand < 0.6:
+                                s.send(cmd+":" + str(l) + "\n")
+                            else:
+                                s.send("CALL\n")
+                        elif prob_winning >= 0.7:
+                            s.send("CALL\n")
+                        else:
+                            s.send("CHECK\n")
+                    else:
+                        if prob_winning >= 0.7:
                             s.send("CALL\n")
                         else:
                             s.send("CHECK\n")

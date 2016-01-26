@@ -37,13 +37,16 @@ hand_log_dir = "HandLongsMini/"
 ##########################################
 
 
-game_files = [hand_log_dir+current_player+'_vs_'+player for player in players if player != current_player]
+# game_files = [hand_log_dir+current_player+'_vs_'+player for player in players if player != current_player]
+player1 = 'mini'
+player2 = 'MADbot'
+game_files = ['../../'+player1+'_'+player2+'-2.txt']
 
-pp = PdfPages(current_player+'_night9_game1.pdf')
+# pp = PdfPages(current_player+'_night9_game1.pdf')
 
 for game_file in game_files:
 	f = open(game_file, 'r')
-	player_2 = game_file.split('_vs_')[1]
+	# player_2 = game_file.split('_vs_')[1]
 
 	lines = [line.strip() for line in f]
 	split_lines = [line.split() for line in lines if len(line)>2]
@@ -56,8 +59,10 @@ for game_file in game_files:
 			data.append(int(hand[5][1:-1]))
 
 	plt.plot(data)
-	plt.title(current_player + " against " + player_2)
-	plt.savefig(pp, format = 'pdf')
+	plt.show()
+	quit()
+	# plt.title(current_player + " against " + player_2)
+	# plt.savefig(pp, format = 'pdf')
 	f.close()
 	plt.clf()
 

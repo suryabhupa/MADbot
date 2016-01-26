@@ -17,4 +17,11 @@ New strategy to only fold or call based on thresholds of equity; if the bot play
 Same strategy as before; slightly less conserative bot with bounds (that don't seem to work). Uses ``utils.py``. 
 
 ### MADbotv1.5
-Fixes the bug where bot doesn't initiate bet. Updates thresholds based on previous data. Adds potsize check on preflop and more (controlled) randomness in the strategy decision.
+Fixed the bug where bot doesn't initiate bet. Updates thresholds based on previous data. Adds potsize check on preflop and more (controlled) randomness in the strategy decision.
+
+### MADbotv2.0
+Removes pokereval library's hand eval calulations. Instead uses pre-trained neural networks to get probability of winning. Some thresholds changed.
+
+### MADbotv2.1
+Updated thresholds and some structure based on empirical runs against 1.5
+
